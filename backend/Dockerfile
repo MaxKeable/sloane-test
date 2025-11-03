@@ -31,10 +31,7 @@ COPY --from=builder /app/out/full/ .
 # Install dependencies
 RUN npm ci
 
-# Generate Prisma client
-RUN npx prisma generate --schema=./backend/src/model/db/schema.prisma
-
-# Build backend
+# Build backend (includes Prisma generation via build script)
 RUN npm run build --workspace=backend
 
 # Stage 3: Runner
@@ -51,7 +48,25 @@ ENV PORT=8080
 # Copy built backend from installer
 COPY --from=installer /app ./
 
+# Copy entrypoint script
+COPY backend/scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+
+# Create logs directory with proper permissions and make entrypoint executable
+RUN mkdir -p /app/backend/logs && \
+    chmod 777 /app/backend/logs && \
+    chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Use non-root user for security
+USER node
+
 EXPOSE 8080
 
-# Start the backend server
-CMD ["node", "backend/dist/index.js"]
+# Add health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:8080/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
+# Set working directory
+WORKDIR /app
+
+# Use entrypoint script to validate environment and start server
+CMD ["/usr/local/bin/docker-entrypoint.sh"]

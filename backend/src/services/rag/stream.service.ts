@@ -1,6 +1,7 @@
 import { ModelMessage } from "ai";
 import { streamRagChat } from "./chat.service";
 import { Namespace } from "socket.io";
+import { logger } from "../../../utils/logger";
 
 let io: Namespace | null = null;
 
@@ -10,11 +11,11 @@ export const setSocketIO = (socketIO: Namespace) => {
   io.on("connection", (socket) => {
     socket.on("joinRoom", (chatId: string) => {
       socket.join(chatId);
-      console.log(`[RAG] Socket ${socket.id} joined room ${chatId}`);
+      logger.info(`[RAG] Socket ${socket.id} joined room ${chatId}`);
     });
 
     socket.on("disconnect", () => {
-      console.log(`[RAG] Socket ${socket.id} disconnected`);
+      logger.info(`[RAG] Socket ${socket.id} disconnected`);
     });
   });
 };
@@ -30,7 +31,7 @@ export const streamRagChatToSocket = async (
     throw new Error("Socket.IO not initialized");
   }
 
-  console.log(`[RAG] Starting stream for chatId: ${chatId}`);
+  logger.info(`[RAG] Starting stream for chatId: ${chatId}`);
 
   let fullResponse = "";
   const toolCalls: Array<{ tool: string; args: any }> = [];
@@ -40,13 +41,13 @@ export const streamRagChatToSocket = async (
     assistantId,
     systemPrompt,
     onToolCall: (toolName: string, args: any) => {
-      console.log(`[RAG] Tool call: ${toolName}`, args);
+      logger.info(`[RAG] Tool call: ${toolName}`, args);
       toolCalls.push({ tool: toolName, args });
       io!.to(chatId).emit("rag_tool_call", { toolName, args });
     },
   });
 
-  console.log(`[RAG] Starting to consume full stream...`);
+  logger.info(`[RAG] Starting to consume full stream...`);
   let chunkCount = 0;
 
   for await (const part of result.fullStream) {
@@ -54,22 +55,22 @@ export const streamRagChatToSocket = async (
       chunkCount++;
       fullResponse += part.text;
       io!.to(chatId).emit("rag_response", fullResponse);
-      console.log(`[RAG] Text delta: "${part.text}"`);
+      logger.debug(`[RAG] Text delta: "${part.text}"`);
     } else if (part.type === "tool-call") {
-      console.log(`[RAG] Tool call in stream: ${part.toolName}`);
+      logger.info(`[RAG] Tool call in stream: ${part.toolName}`);
     } else if (part.type === "tool-result") {
-      console.log(`[RAG] Tool result in stream: ${part.toolName}`);
+      logger.info(`[RAG] Tool result in stream: ${part.toolName}`);
     } else {
-      console.log(`[RAG] Stream event: ${part.type}`);
+      logger.debug(`[RAG] Stream event: ${part.type}`);
     }
   }
 
-  console.log(
+  logger.info(
     `[RAG] Stream complete. Chunks: ${chunkCount}, Length: ${fullResponse.length}`
   );
 
   setTimeout(() => {
-    console.log(`[RAG] Emitting stream_end to room: ${chatId}`);
+    logger.info(`[RAG] Emitting stream_end to room: ${chatId}`);
     io!.to(chatId).emit("stream_end", {
       response: fullResponse,
       toolCalls,

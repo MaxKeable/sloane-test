@@ -22,8 +22,17 @@ apiRouter.use(
     router: appApiRouter,
     createContext: createRequestContext,
     onError({ error, path, input, ctx, type, req }) {
-      logger.error("Error occurred in App API:", { path });
-      logger.error(error);
+      logger.error("Error occurred in App API:", {
+        path,
+        type,
+        url: req.url,
+        method: req.method,
+        errorName: error.name,
+        errorMessage: error.message,
+        errorCode: (error as any).code,
+        userId: (ctx as any)?.clerkUserId,
+        stack: error.stack,
+      });
     },
   })
 );
@@ -35,8 +44,17 @@ apiRouter.use(
     router: adminApiRouter,
     createContext: createRequestContext,
     onError({ error, path, input, ctx, type, req }) {
-      logger.error("Error occurred in Admin API:", { path });
-      logger.error(error);
+      logger.error("Error occurred in Admin API:", {
+        path,
+        type,
+        url: req.url,
+        method: req.method,
+        errorName: error.name,
+        errorMessage: error.message,
+        errorCode: (error as any).code,
+        userId: (ctx as any)?.clerkUserId,
+        stack: error.stack,
+      });
     },
   })
 );
@@ -47,8 +65,17 @@ apiRouter.use(
     router: mcpApiRouter,
     createContext: createRequestContext,
     onError({ error, path, input, ctx, type, req }) {
-      logger.error("Error occurred in MCP API:", { path });
-      logger.error(error);
+      logger.error("Error occurred in MCP API:", {
+        path,
+        type,
+        url: req.url,
+        method: req.method,
+        errorName: error.name,
+        errorMessage: error.message,
+        errorCode: (error as any).code,
+        userId: (ctx as any)?.clerkUserId,
+        stack: error.stack,
+      });
     },
   })
 );
