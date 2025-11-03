@@ -1,0 +1,36 @@
+{
+  "name": "mcp-server",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "mcp-server": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsup src/index.ts --watch --onSuccess \"node dist/index.js\"",
+    "build": "tsup src/index.ts",
+    "start:stdio": "node dist/index.js",
+    "start:sse": "MCP_TRANSPORT=sse PORT=3333 node dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.8.1",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.1",
+    "@trpc/client": "^11.6.0",
+    "@trpc/server": "^11.6.0",
+    "express": "^5.1.0",
+    "superjson": "^2.2.2",
+    "zod": "^3.25.76"
+  }
+}

@@ -1,0 +1,284 @@
+/* src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+
+@import "tailwindcss";
+@import "@repo/ui-kit/globals.css";
+
+@theme {
+  /* Brand Colors */
+  --color-brand-white: #FFEFD6;
+  --color-brand-cream: #Fdf3e3;
+  --color-brand-logo: #C1FF72;
+  --color-brand-green: #075b33;
+  --color-brand-green-mid: #4b8052;
+  --color-brand-green-light: #7ED957;
+  --color-brand-green-dark: #003b1f;
+  --color-brand-orange: #FF914D;
+  --color-brand-orange-light: #FFBD59;
+  --color-brand-orange-dark: #572700;
+  --color-brand-yellow: #FFD874;
+  --color-new-green: #4b8052;
+  --color-new-tan: #Fdf3e3;
+  --color-brand-ocean: #bdd8d4;
+  --color-brand-cacao: #9f9071;
+  --color-brand-tumeric: #f4d78e;
+  --color-brand-chai: #dfc99e;
+  --color-brand-clay: #ddb794;
+  --color-brand-mint: #b8e1bf;
+  --color-brand-matcha: #e2edab;
+  --color-brand-coconut: #e6dccb;
+  
+  /* Font Families */
+  --font-family-black: "Archivo Black", sans-serif;
+  --font-family-quicksand: "Quicksand", sans-serif;
+  --font-family-raleway: "Raleway", sans-serif;
+  --font-black: var(--font-family-black);
+  --font-raleway: var(--font-family-raleway);
+  
+  /* Custom Animations */
+  --animate-swipe: swipe 2.7s linear infinite 250ms;
+  --animate-swipe-rotate: swipe-rotate 2.7s linear infinite 250ms;
+  
+  /* Transition Properties */
+  --transition-property-width: width;
+  --transition-duration-1300: 1300ms;
+  --transition-timing-function-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes swipe {
+  0% { transform: translateX(0); }
+  10% { transform: translateX(-0.1em); }
+  20% { transform: translateX(0.1em); }
+  30% { transform: translateX(-0.1em); }
+  40% { transform: translateX(0.1em); }
+  50% { transform: translateX(0); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes swipe-rotate {
+  0% { transform: rotate(0); }
+  10% { transform: rotate(-5deg); }
+  20% { transform: rotate(5deg); }
+  30% { transform: rotate(-5deg); }
+  40% { transform: rotate(5deg); }
+  50% { transform: rotate(0); }
+  100% { transform: rotate(0); }
+}
+
+/* Optional: Add any additional custom styles here */
+
+
+h1:not([class*="text-"]):not([class*="font-"]) {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+h2:not([class*="text-"]):not([class*="font-"]) {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 24px;
+  margin-bottom: 24px;
+  margin-top: 16px;
+}
+h3:not([class*="text-"]):not([class*="font-"]) {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 20px;
+  margin-bottom: 16px;
+  margin-top: 16px;
+}
+h4:not([class*="text-"]):not([class*="font-"]) {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  margin-top: 32px;
+  text-decoration-line: underline;
+}
+h5:not([class*="text-"]):not([class*="font-"]) {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+p:not([class*="text-"]):not([class*="font-"]) {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+}
+ul {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  margin-top: 4px;
+}
+
+.cl-internal-b3fm6y{
+  display: none;
+}
+
+.cl-internal-17ydaof {
+  /* Your base styles for .cl-internal-17ydaof here */
+  max-width: 100%; /* Example base style, adjust as needed */
+  margin: 0; /* Example base style, adjust as needed */
+}
+
+/* Media query for screens up to 480px wide (30em * 16px) */
+@media (max-width: 480px) {
+  .cl-internal-17ydaof {
+      /* Your responsive styles for .cl-internal-17ydaof here */
+      max-width: calc(100vw - 100px); /* Adjusted for demonstration, subtract desired margins */
+      margin: 0 auto; /* Center align if needed, adjust margins as desired */
+      margin-right: 100px;
+  }
+}
+
+.css-14s5rfu-MuiFormLabel-root-MuiInputLabel-root  {
+  color: #d5d4d3 !important;
+}
+
+.css-yjsfm1 {
+  color: #d5d4d3 !important;
+}
+
+.cl-formButtonPrimary{
+  background-color: #00BF63;
+}
+
+.cl-formButtonPrimary:hover{
+  background-color: #004B27;
+  color: #C1FF72;
+}
+
+.cl-internal-phfxlr{
+  width: contain !important;
+}
+
+@media (max-width: 480px){
+.cl-internal-17ydaof {
+    max-width: calc(100vw - 100px);
+    margin: 0 auto;
+    margin-right: -50px;
+}}
+
+.sidebar-transition{
+  animation: sideFadeIn 500ms forwards;
+  
+}
+
+@keyframes sideFadeIn {
+  0% {
+    transform: translateX(0px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0px);
+    opacity: 1;
+  }
+}
+
+/* Styles for the sidebar container with thinner scrollbars */
+.sidebar-container::-webkit-scrollbar {
+  width: 3px; /* Thinner scrollbar */
+}
+
+.sidebar-container::-webkit-scrollbar-thumb {
+  background-color: #c2ff729e; /* Handle colour */
+  border-radius: 8px; /* Rounded corners for the handle */
+}
+
+/* Custom scrollbar styles */
+.textarea1-scrollbar::-webkit-scrollbar {
+  width: 8px; /* Adjust the width of the scrollbar */
+  
+   /* Adjust the height of the scrollbar */
+}
+
+.textarea1-scrollbar::-webkit-scrollbar-track {
+  background: transparent; /* Hide the track */
+}
+
+.textarea1-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.5); /* Color of the thumb */
+  border-radius: 10px; /* Round the corners of the thumb */
+  height: 8px;
+}
+
+/* For Firefox */
+.textarea1-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
+  
+}
+
+/* Add to your CSS file */
+.phone-input-container .flag-dropdown,
+.phone-input-container .flag-dropdown.open,
+.phone-input-container .flag-dropdown:hover,
+.phone-input-container .selected-flag,
+.phone-input-container .selected-flag:hover,
+.phone-input-container .selected-flag.open,
+.phone-input-container .selected-flag:focus {
+  background-color: transparent !important;
+}
+
+.phone-input-container .selected-flag:hover,
+.phone-input-container .selected-flag:active,
+.phone-input-container .selected-flag:focus {
+  background-color: transparent !important;
+}
+
+.phone-input-container {
+  margin: 1rem 0; /* equivalent to my-4 in Tailwind */
+}
+
+/* Add this to your existing CSS file */
+.scrollbar-hide {
+  /* For Firefox */
+  scrollbar-width: none;
+  /* For Internet Explorer and Edge */
+  -ms-overflow-style: none;
+}
+
+/* For Webkit browsers like Chrome, Safari */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
+/* Global Custom Scrollbar Styles */
+* {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(193, 255, 114, 0.8) rgba(7, 91, 51, 0.2);
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(7, 91, 51, 0.1);
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #C1FF72 0%, #7ED957 100%);
+  border-radius: 10px;
+  border: 1px solid rgba(7, 91, 51, 0.2);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #7ED957 0%, #4b8052 100%);
+  border-color: rgba(7, 91, 51, 0.4);
+}
+
+*::-webkit-scrollbar-corner {
+  background: rgba(7, 91, 51, 0.1);
+}
+

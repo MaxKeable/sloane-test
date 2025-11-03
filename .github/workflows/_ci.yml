@@ -1,0 +1,232 @@
+name: build_and_deploy_sloane
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      AZURE_SERVER_APP_NAME:
+        required: false
+        type: string
+      AZURE_RESOURCE_GROUP_NAME:
+        required: true
+        type: string
+    secrets:
+      AZURE_CLIENT_ID:
+        required: true
+      AZURE_TENANT_ID:
+        required: true
+      AZURE_SUBSCRIPTION_ID:
+        required: true
+      AZURE_SWA_DEPLOY_TOKEN:
+        required: true
+      VITE_CLERK_PUBLISHABLE_KEY:
+        required: true
+      VITE_API_BASE_URL:
+        required: false
+      VITE_STRIPE_PUBLIC_KEY:
+        required: false
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      workflow-changed: ${{ steps.changes.outputs.workflow }}
+      server-changed: ${{ steps.changes.outputs.server }}
+      frontend-changed: ${{ steps.changes.outputs.frontend }}
+      frontend-packages-changed: ${{ steps.changes.outputs.frontend-packages }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            workflow:
+              - '.github/workflows/**'
+            server:
+              - 'backend/**'
+            frontend:
+              - 'frontend/apps/user-app/**'
+            frontend-packages:
+              - 'frontend/packages/**'
+
+  deploy-server:
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.workflow-changed == 'true' ||
+      needs.detect-changes.outputs.server-changed == 'true'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - name: Install dependencies (root)
+        run: npm ci
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install turbo globally
+        run: npm install -g turbo
+
+      - name: Prune monorepo for backend
+        run: turbo prune backend --docker
+
+      - name: Setup pruned workspace
+        run: |
+          cd out
+          cp -r json/* .
+          cp -r full/* .
+          rm -rf json full
+
+      - name: Install backend dependencies
+        run: |
+          cd out
+          # Set platform targeting for Linux x64 (Prisma compatibility)
+          export npm_config_target_platform=linux
+          export npm_config_target_arch=x64
+          npm ci --only=production
+
+      - name: Generate Prisma client
+        run: |
+          cd out
+          npx prisma generate --schema=./backend/src/model/db/schema.prisma
+
+      - name: Build backend
+        run: |
+          cd out
+          npm run build --workspace=backend
+
+      - name: Prepare deployment package
+        run: |
+          cd out
+          # Create deployment directory
+          mkdir -p deploy
+
+          # Copy built backend
+          cp -r backend/dist deploy/
+
+          # Copy package.json and package-lock.json
+          cp backend/package.json deploy/
+          cp package-lock.json deploy/ 2>/dev/null || echo "No root package-lock.json found"
+
+          # Copy node_modules (production only)
+          cp -r node_modules deploy/
+
+          # Copy Prisma schema and generated client
+          mkdir -p deploy/backend/src/model/db
+          cp backend/src/model/db/schema.prisma deploy/backend/src/model/db/
+          cp -r backend/src/model/db/generated deploy/backend/src/model/db/ 2>/dev/null || echo "No generated Prisma files found"
+
+      - name: Create web.config
+        run: |
+          cd out/deploy
+          cat > web.config << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <system.webServer>
+              <handlers>
+                <add name="iisnode" path="dist/index.js" verb="*" modules="iisnode"/>
+              </handlers>
+              <rewrite>
+                <rules>
+                  <rule name="NodeInspector" patternSyntax="ECMAScript" stopProcessing="true">
+                    <match url="^dist/index.js\/debug[\/]?" />
+                  </rule>
+                  <rule name="StaticContent">
+                    <action type="Rewrite" url="public{REQUEST_URI}"/>
+                  </rule>
+                  <rule name="DynamicContent">
+                    <conditions>
+                      <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="True"/>
+                    </conditions>
+                    <action type="Rewrite" url="dist/index.js"/>
+                  </rule>
+                </rules>
+              </rewrite>
+              <security>
+                <requestFiltering>
+                  <hiddenSegments>
+                    <remove segment="bin"/>
+                  </hiddenSegments>
+                </requestFiltering>
+              </security>
+              <httpErrors existingResponse="PassThrough" />
+              <iisnode 
+                watchedFiles="web.config;*.js"
+                loggingEnabled="true"
+                logDirectory="iisnode"
+              />
+            </system.webServer>
+          </configuration>
+          EOF
+
+      - name: Deploy to Azure Web App
+        run: |
+          cd out/deploy
+          zip -r ../deploy.zip .
+          az webapp deployment source config-zip \
+            --resource-group ${{ inputs.AZURE_RESOURCE_GROUP_NAME }} \
+            --name ${{ inputs.AZURE_SERVER_APP_NAME }} \
+            --src ../deploy.zip
+
+      - name: Deployment Status
+        run: |
+          echo "✅ Backend deployed successfully to Azure Web App!"
+          echo "🔗 Application URL: https://${{ inputs.AZURE_SERVER_APP_NAME }}.azurewebsites.net"
+
+  deploy-frontend:
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.workflow-changed == 'true' ||
+      needs.detect-changes.outputs.frontend-changed == 'true' ||
+      needs.detect-changes.outputs.frontend-packages-changed == 'true'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - name: Install dependencies (root)
+        run: npm ci
+
+      - name: Generate Prisma schemas for backend types
+        run: npm run prisma:generate -w backend
+
+      - name: Build user app
+        env:
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          VITE_STRIPE_PUBLIC_KEY: ${{ secrets.VITE_STRIPE_PUBLIC_KEY }}
+          NODE_OPTIONS: "--max_old_space_size=4096"
+        run: npm run build -w frontend/apps/user-app
+
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_SWA_DEPLOY_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          app_location: frontend/apps/user-app/dist
+          skip_app_build: true

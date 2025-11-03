@@ -1,0 +1,26 @@
+{
+  "name": "sloane",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend/apps/*",
+    "frontend/packages/*",
+    "mcp-server"
+  ],
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "clean": "turbo clean",
+    "docker:build": "docker build -t backend-test -f backend/Dockerfile ."
+  },
+  "devDependencies": {
+    "tsx": "^4.20.5",
+    "turbo": "^2.5.6"
+  },
+  "packageManager": "npm@11.6.0",
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

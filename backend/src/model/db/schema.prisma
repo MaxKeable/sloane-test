@@ -1,0 +1,309 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+generator zod {
+  provider = "prisma-zod-generator"
+  output   = "./generated/schemas"
+  minimal  = true
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGO_URI")
+}
+
+type ActionsNotes {
+  id        String   @map("_id") @db.ObjectId
+  checked   Boolean
+  id_       String   @map("id")
+  text      String
+  timestamp DateTime @default(now()) @db.Date
+}
+
+type AssistantsPrompts {
+  id      String @map("_id") @db.ObjectId
+  display String
+  prompt  String
+}
+
+type ChatsMessages {
+  id        String   @map("_id") @db.ObjectId
+  answer    String
+  createdAt DateTime @default(now()) @db.Date
+  question  String
+  updatedAt DateTime @default(now()) @db.Date
+  file_type String?
+  imageUrl  String?
+  imageName String?
+}
+
+type ChatsSessionContext {
+  currentTopic String?
+  keyDecisions String[]
+  lastUpdated  DateTime @default(now()) @db.Date
+}
+
+type ConfigsWebSearchConfig {
+  allowedDomains String[]
+  blockedDomains String[]
+  maxUses        Int
+}
+
+type UsergoalsMonthlyGoals {
+  completedAt DateTime? @default(now()) @db.Date
+  createdAt   DateTime  @default(now()) @db.Date
+  isCompleted Boolean   @default(false)
+  title       String
+}
+
+type UsergoalsWeeklyGoals {
+  completedAt DateTime? @default(now()) @db.Date
+  createdAt   DateTime  @default(now()) @db.Date
+  isCompleted Boolean   @default(false)
+  title       String
+}
+
+type UsersBusinessProfile {
+  businessDescription String?
+  businessName        String?
+  businessSize        Int?
+  businessType        String?
+  businessTypes       String[]
+  businessUrl         String?
+  friendName          String?
+  instagramUrl        String?
+  motivation          String?
+  referralSource      String?
+}
+
+type UsersGoalTracking {
+  isEnabled    Boolean
+  monthlyGoals UsergoalsMonthlyGoals[]
+  weeklyGoals  UsergoalsWeeklyGoals[]
+}
+
+model actions {
+  id          String         @id @default(auto()) @map("_id") @db.ObjectId
+  v           Int            @map("__v")
+  chatId      String?
+  colour      String?
+  column      String
+  createdAt   DateTime       @default(now()) @db.Date
+  description String?
+  dueDate     DateTime?      @db.Date
+  messageId   String?
+  notes       ActionsNotes[]
+  priority    String?
+  status      String?
+  tags        String[]
+  text        String
+  title       String?
+  updatedAt   DateTime       @default(now()) @db.Date
+  userId      String
+  assistantId String?
+
+  @@index([chatId], map: "chatId_1")
+  @@index([messageId], map: "messageId_1")
+  @@index([userId], map: "userId_1")
+}
+
+model assistants {
+  id                     String              @id @default(auto()) @map("_id") @db.ObjectId
+  v                      Int                 @map("__v")
+  basePrompt             String
+  createdAt              DateTime            @default(now()) @map("createdAt") @db.Date
+  description            String
+  image                  String
+  jobTitle               String
+  name                   String
+  prompts                AssistantsPrompts[]
+  relatedAssistants      String[]            @db.ObjectId
+  updatedAt              DateTime            @default(now()) @map("updatedAt") @db.Date
+  user                   String?
+  excludeBusinessContext Boolean             @default(false)
+  isolateRagContext      Boolean             @default(false)
+  allowModelSelection    Boolean             @default(false)
+}
+
+model chats {
+  id             String                @id @default(auto()) @map("_id") @db.ObjectId
+  v              Int                   @map("__v")
+  assistant      String?               @db.ObjectId
+  createdAt      DateTime              @default(now()) @map("createdAt") @db.Date
+  folderId       String?
+  messages       ChatsMessages[]
+  sessionContext ChatsSessionContext?
+  title          String
+  updatedAt      DateTime              @default(now()) @map("updatedAt") @db.Date
+  user           String
+  customOrder    Int?
+
+  @@index([user])
+}
+
+model configs {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  v         Int    @map("__v")
+  aiService String
+}
+
+model folders {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  v               Int      @map("__v")
+  assistant       String?  @db.ObjectId
+  chats           String[] @db.ObjectId
+  title           String
+  user            String
+  customChatOrder String[] @default([]) @db.ObjectId
+}
+
+model MoveClub {
+  id            String                 @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt     DateTime               @default(now()) @db.Date
+  updatedAt     DateTime               @default(now()) @db.Date
+  imageUrl      String?
+  eventDateTime DateTime               @db.Date
+  duration      Int
+  eventTitle    String?
+  eventLink     String?
+  registrations MoveClubRegistration[]
+}
+
+model MoveClubRegistration {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt       DateTime @default(now()) @db.Date
+  updatedAt       DateTime @default(now()) @db.Date
+  userId          String   @unique()
+  invitedFriend   Boolean  @default(false)
+  addedToCalendar Boolean  @default(false)
+  moveClubId      String   @db.ObjectId
+  moveClub        MoveClub @relation(fields: [moveClubId], references: [id])
+}
+
+model onboardingquestions {
+  id                     String    @id @default(auto()) @map("_id") @db.ObjectId
+  v                      Int       @map("__v")
+  deletedAt              DateTime? @db.Date
+  description            String
+  answers                String?   @db.ObjectId
+  isInformative          Boolean?
+  placeholderSentence    String?
+  position               Int
+  productBusinessExample String?
+  question               String?
+  serviceBusinessExample String?
+  title                  String
+  videoThumbnailUrl      String?
+  videoUrl               String
+}
+
+model questionanswers {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  v         Int       @map("__v")
+  answer    String
+  createdAt DateTime? @db.Date
+  question  String    @db.ObjectId
+  updatedAt DateTime? @db.Date
+  user      String    @db.ObjectId
+
+  @@unique([user, question], map: "user_1_question_1")
+}
+
+model stockimages {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  v           Int      @map("__v")
+  createdAt   DateTime @db.Date
+  description String
+  filename    String?
+  imageName   String
+  imageSize   Int
+  imageUrl    String
+  tags        String[]
+  title       String
+
+  @@fulltext([description, filename, tags], map: "filename_text_description_text_tags_text")
+}
+
+model usergoals {
+  id           String                  @id @default(auto()) @map("_id") @db.ObjectId
+  v            Int                     @map("__v")
+  createdAt    DateTime                @default(now()) @db.Date
+  isEnabled    Boolean
+  monthlyGoals UsergoalsMonthlyGoals[]
+  updatedAt    DateTime                @default(now()) @db.Date
+  userId       String                  @unique(map: "userId_1")
+  weeklyGoals  UsergoalsWeeklyGoals[]
+}
+
+model users {
+  id                  String               @id @default(auto()) @map("_id") @db.ObjectId
+  v                   Int                  @map("__v")
+  businessProfile     UsersBusinessProfile
+  clerkUserId         String               @unique(map: "clerkUserId_1")
+  createdAt           DateTime             @default(now()) @db.Date
+  email               String               @unique(map: "email_1")
+  goalTracking        UsersGoalTracking?
+  isDeleted           Boolean?
+  mobileNumber        String?
+  name                String
+  onboardingCompleted Boolean
+  onboardingProgress  Int
+  questionAnswers     String[]             @db.ObjectId
+  stripeCustomerId    String               @unique(map: "stripeCustomerId_1")
+  updatedAt           DateTime             @default(now()) @db.Date
+}
+
+model videos {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  v            Int      @map("__v")
+  createdAt    DateTime @default(now()) @db.Date
+  description  String
+  title        String
+  updatedAt    DateTime @default(now()) @db.Date
+  videoUrl     String
+  thumbnailUrl String?
+  views        Int
+}
+
+enum FeatureFlagName {
+  MOVE_CLUB
+}
+
+model FeatureFlags {
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  name      FeatureFlagName @unique
+  isEnabled Boolean         @default(true)
+}
+
+model resources {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  content     String
+  userId      String
+  assistantId String?      @db.ObjectId
+  chatId      String?      @db.ObjectId
+  title       String?
+  source      String?
+  type        String?      @default("text")
+  createdAt   DateTime     @default(now()) @db.Date
+  updatedAt   DateTime     @default(now()) @db.Date
+  embeddings  embeddings[]
+
+  @@index([userId], map: "userId_1")
+  @@index([assistantId], map: "assistantId_1")
+  @@index([chatId], map: "chatId_1")
+}
+
+model embeddings {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  resourceId String    @db.ObjectId
+  resource   resources @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  content    String
+  embedding  Float[]
+  userId     String
+  createdAt  DateTime  @default(now()) @db.Date
+
+  @@index([resourceId], map: "resourceId_1")
+  @@index([userId], map: "userId_1")
+}
