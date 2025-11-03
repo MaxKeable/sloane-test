@@ -46,12 +46,12 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
-ENV PORT=8181
+ENV PORT=8080
 
 # Copy built backend from installer
 COPY --from=installer /app ./
 
-EXPOSE 8181
+EXPOSE 8080
 
 # Start the backend server
 CMD ["node", "backend/dist/index.js"]
